@@ -29,9 +29,9 @@ ui <- fluidPage(
                    selected = "gdpPercap"),
       #selezione variabile asse Y
       radioButtons("yaxis", "Y",
-                   choices = c("Life expectancy" = "lifeExp", 
-                               "Population" = "pop", 
-                               "GDP per capita" = "gdpPercap"), 
+                   choices = c("Aspettativa di vita" = "lifeExp", 
+                               "Popolazione" = "pop", 
+                               "GDP procapite" = "gdpPercap"), 
                    selected = "lifeExp")
     ),
     
