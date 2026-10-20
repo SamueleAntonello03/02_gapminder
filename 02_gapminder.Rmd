@@ -1,0 +1,95 @@
+---
+title: "02_gapminder"
+author: "Samuele Antonello 162640"
+date: "2026-10-20"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## GapMinder shinyapp
+
+Questo codice si occupa di produrre una shinyapp in grado di visualizzare uno scatterplot interattivo che mostra i dati del dataset "gapminder".
+
+Sulla sinistra possiamo notare un menù a che contiene diversi tipi di input:
+
+* uno slider per impostare l'anno che ci interessa, va dal 1952 al 2007, notiamo nel dataset che i dati sono stati aggiornati ogni 5 anni dunque lo 'step' vale 5.
+* una selezione del continente da osservare, di default osserviamo li osserviamo tutti.
+* due radiobutton che ci servono per selezionare la variabile che vogliamo vedere sulle assi dello scatterplot.
+
+Il grafico inoltre colora i pallini in base al continente di appartenenza e li dimensiona sulla base della popolazione.
+
+```{r}
+
+library(gapminder)
+library(ggplot2)
+library(dplyr)
+library(shiny)
+
+ui <- fluidPage(
+  
+  titlePanel("Gapminder"),
+  
+  #pannello laterale che conterrà tutti i controlli interattivi
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput("year", # input slider per scegliere l'anno
+                  "Year",
+                  min = 1952,
+                  max = 2007,
+                  step = 5,
+                  value = 1952),
+      selectInput("continent", # input per la scelta del continente
+                  "Continent",
+                  choices = c("Africa", "Asia", "Americas", "Europe", "Oceania", "All"),
+                  selected = "All"),
+      #selezione variabile asse X
+      radioButtons("xaxis", "X",
+                   choices = c("Aspettativa di vita" = "lifeExp",
+                               "Popolazione" = "pop",
+                               "GDP procapite" = "gdpPercap"),
+                   selected = "gdpPercap"),
+      #selezione variabile asse Y
+      radioButtons("yaxis", "Y",
+                   choices = c("Aspettativa di vita" = "lifeExp", 
+                               "Popolazione" = "pop", 
+                               "GDP procapite" = "gdpPercap"), 
+                   selected = "lifeExp")
+    ),
+    
+    #pannello principale dove viene mostrato il grafico
+    mainPanel(
+      plotOutput("scatterPlot")
+    ) 
+    
+  ) 
+)
+
+server = function(input, output){
+  output$scatterPlot = renderPlot({
+    #filtraggio dinamico del dataset rieseguito a ogni modifica dell'input
+    if(input$continent == "All"){
+      dataset = filter(gapminder, year == input$year)
+    }else{
+      dataset = filter(gapminder, year == input$year, continent == input$continent)
+    }
+    
+    #disegnamo lo scatterplot
+    ggplot(dataset, aes_string(input$xaxis,input$yaxis, size = "pop", color = "country")) +
+      geom_point(alpha = 0.5, show.legend = FALSE) +
+      scale_color_manual(values = country_colors) +
+      #scale_color_viridis_d(option = "plasma") +
+      scale_size(range = c(2,20)) +
+      scale_x_log10() +
+      scale_y_log10() +
+      theme_classic()
+  })
+}
+
+#avvio app
+shinyApp(ui = ui, server = server)
+```
+
